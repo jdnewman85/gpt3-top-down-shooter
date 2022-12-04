@@ -22,11 +22,8 @@
       // Initialize game variables
       let playerX = canvas.width / 2;
       let playerY = canvas.height / 2;
-      const playerSize = 20;
       let projectiles = [];
       let enemies = [];
-      const enemySpeed = -5;
-      let score = 0;
 
       // Track which keys are currently pressed
       let keysPressed = {
@@ -68,6 +65,22 @@
         }
       });
 
+//      // Handle player shooting
+//      canvas.addEventListener('click', (event) => {
+//        // Calculate the x and y coordinates of the mouse cursor
+//        const destX = event.clientX;
+//        const destY = event.clientY;
+//        // Calculate the distance and angle to the cursor
+//        const dx = destX - playerX;
+//        const dy = destY - playerY;
+//        const angle = Math.atan2(dy, dx);
+//        // Create a new projectile and add it to the array
+//        projectiles.push({
+//          x: playerX,
+//          y: playerY,
+//          angle: angle,
+//        });
+//      });
       // Handle player clicking the mouse to shoot a projectile
       canvas.addEventListener('click', (event) => {
         // Get the mouse position relative to the canvas
@@ -108,62 +121,6 @@
         }
       }, 1000);
 
-      function gameOver() {
-        // Set the fill color to black
-        ctx.fillStyle = '#000000';
-        // Clear the canvas with the black fill color
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        // Set the font and fill color for the "game over" text
-        ctx.font = '72px sans-serif';
-        ctx.fillStyle = '#ff0000';
-        // Center the "game over" text on the canvas
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        // Draw the "game over" text on the canvas
-        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
-
-        // Set the font and fill color for the final score text
-        ctx.font = '48px sans-serif';
-        ctx.fillStyle = '#00ff00';
-        // Draw the final score text below the "game over" text
-        ctx.fillText('FINAL SCORE: ' + score, canvas.width / 2, canvas.height / 2 + 72);
-      }
-
-      function drawProjectile(projectile) {
-        // Save the current state of the canvas context
-        ctx.save();
-
-        // Rotate the canvas context by the projectile's rotation
-        ctx.rotate(projectile.rotation);
-
-        // Set the stroke style for the projectile
-        ctx.strokeStyle = '#8a2be2';
-        // Set the line width for the projectile
-        ctx.lineWidth = projectile.size;
-
-        // Begin a new path for the projectile
-        ctx.beginPath();
-        // Move to the starting position of the projectile
-        ctx.moveTo(projectile.x, projectile.y);
-        // Draw a line to the first point of the star
-        ctx.lineTo(projectile.x + projectile.size * 0.5, projectile.y + projectile.size * 0.866);
-        // Draw a line to the second point of the star
-        ctx.lineTo(projectile.x + projectile.size * 0.866, projectile.y + projectile.size * 0.5);
-        // Draw a line to the third point of the star
-        ctx.lineTo(projectile.x + projectile.size, projectile.y);
-        // Draw a line to the fourth point of the star
-        ctx.lineTo(projectile.x + projectile.size * 0.866, projectile.y - projectile.size * 0.5);
-        // Draw a line to the fifth point of the star
-        ctx.lineTo(projectile.x + projectile.size * 0.5, projectile.y - projectile.size * 0.866);
-        // Close the path, connecting the last point to the first point of the star
-        ctx.closePath();
-        // Stroke the path with the specified stroke style and line width
-        ctx.stroke();
-
-        // Restore the previous state of the canvas context
-        ctx.restore();
-      }
-
       // Main game loop
       function gameLoop() {
         // Set the fill color to a muted blue
@@ -177,12 +134,6 @@
           // Calculate the new position of the projectile using its stored angle
           projectile.x += Math.cos(projectile.angle) * 10;
           projectile.y += Math.sin(projectile.angle) * 10;
-
-          // Update the projectile's rotation
-          projectile.rotation += 0.5;
-
-          //Draw the projectile
-          drawProjectile(projectile);
           // Check for collisions between the projectile and enemies
           for (let j = 0; j < enemies.length; j++) {
             const enemy = enemies[j];
@@ -200,8 +151,6 @@
               // Remove the projectile and enemy from the game
               projectiles.splice(i, 1);
               enemies.splice(j, 1);
-              // Increment the score by 1
-              score++;
               // Decrement the indices to avoid skipping over any projectiles or enemies
               i--;
               j--;
@@ -224,20 +173,13 @@
         // Update the positions of all enemies
         for (let i = 0; i < enemies.length; i++) {
           const enemy = enemies[i];
-          // Calculate the distance between the enemy and the player
-          const dx = enemy.x - playerX;
-          const dy = enemy.y - playerY;
+          // Calculate the distance and angle to the player
+          const dx = playerX - enemy.x;
+          const dy = playerY - enemy.y;
           const angle = Math.atan2(dy, dx);
-          enemy.x += Math.cos(angle) * enemySpeed;
-          enemy.y += Math.sin(angle) * enemySpeed;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          // If the distance is less than the sum of the sizes of the enemy and player,
-            // they are colliding
-          if (distance < enemy.size + playerSize) {
-            cancelAnimationFrame(gameLoop);
-            gameOver();
-            return;
-          }
+          // Update the position of the enemy using the angle to the player
+          enemy.x += Math.cos(angle) * 2;
+          enemy.y += Math.sin(angle) * 2;
         }
 
         // Draw the player
@@ -245,6 +187,15 @@
         ctx.beginPath();
         ctx.arc(playerX, playerY, 10, 0, 2 * Math.PI);
         ctx.fill();
+
+        // Draw all projectiles
+        ctx.fillStyle = '#fff';
+        for (let i = 0; i < projectiles.length; i++) {
+          const projectile = projectiles[i];
+          ctx.beginPath();
+          ctx.arc(projectile.x, projectile.y, 2, 0, 2 * Math.PI);
+          ctx.fill();
+        }
 
         // Draw all enemies
         for (let i = 0; i < enemies.length; i++) {
@@ -271,19 +222,11 @@
           playerX += 5;
         }
 
-        // Draw the score in the upper right corner of the canvas
-        ctx.font = '16px sans-serif';
-        ctx.fillStyle = '#00ff00';
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'top';
-        ctx.fillText(`Score: ${score}`, canvas.width - 10, 10);
-
         // Schedule the next frame
         requestAnimationFrame(gameLoop);
       }
       // Start the game loop
       gameLoop();
-      gameOver();
     </script>
   </body>
 </html>

@@ -1,0 +1,146 @@
+<html>
+  <head>
+    <title>Top-Down Shooter</title>
+  </head>
+  <body>
+    <canvas id="game-canvas" width="400" height="400"></canvas>
+    <script>
+      // Get a reference to the canvas element
+      const canvas = document.getElementById('game-canvas');
+      // Set the initial size of the canvas to match the size of the browser window
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      // Add an event listener to update the size of the canvas when the window is resized
+      window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+      // Get the 2D rendering context
+      const ctx = canvas.getContext('2d');
+      // Set the fill color to a muted blue
+      ctx.fillStyle = '#6699cc';
+      // Initialize game variables
+      let playerX = canvas.width / 2;
+      let playerY = canvas.height / 2;
+      let projectiles = [];
+      let enemies = [];
+
+      // Handle player movement
+      window.addEventListener('keydown', (event) => {
+        if (event.code === 'KeyW') {
+          playerY -= 10; // Move player up
+        } else if (event.code === 'KeyS') {
+          playerY += 10; // Move player down
+        } else if (event.code === 'KeyA') {
+          playerX -= 10; // Move player left
+        } else if (event.code === 'KeyD') {
+          playerX += 10; // Move player right
+        }
+      });
+
+      // Handle player shooting
+      canvas.addEventListener('click', (event) => {
+        // Calculate the x and y coordinates of the mouse cursor
+        const destX = event.clientX;
+        const destY = event.clientY;
+        // Calculate the distance and angle to the cursor
+        const dx = destX - playerX;
+        const dy = destY - playerY;
+        const angle = Math.atan2(dy, dx);
+        // Create a new projectile and add it to the array
+        projectiles.push({
+          x: playerX,
+          y: playerY,
+          angle: angle,
+        });
+      });
+
+      // Add new enemies at regular intervals
+      setInterval(() => {
+        // Choose a random position for the enemy
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        // Generate random values for the saturation and lightness
+        // Set the lightness value to be between 0 and 100 to avoid pure black or white
+        const saturation = Math.random() * 100;
+        const lightness = Math.random() * 100;
+        // Create a new enemy object with a red hue and the generated saturation and lightness
+        enemies.push({
+          x: x,
+          y: y,
+          size: 20,
+          color: `hsl(0, ${saturation}%, ${lightness}%)`,
+        });
+      }, 1000);
+
+      // Main game loop
+      function gameLoop() {
+        // Set the fill color to a muted blue
+        ctx.fillStyle = '#6699cc';
+        // Clear the canvas with the muted blue fill color
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Update the positions of all projectiles
+        for (let i = 0; i < projectiles.length; i++) {
+          const projectile = projectiles[i];
+          // Calculate the new position of the projectile using its stored angle
+          projectile.x += Math.cos(projectile.angle) * 10;
+          projectile.y += Math.sin(projectile.angle) * 10;
+          // If the projectile is outside the canvas, remove it from the array
+          if (
+            projectile.x < 0 ||
+            projectile.x > canvas.width ||
+            projectile.y < 0 ||
+            projectile.y > canvas.height
+          ) {
+            projectiles.splice(i, 1);
+            i--;
+          }
+        }
+
+        // Update the positions of all enemies
+        for (let i = 0; i < enemies.length; i++) {
+          const enemy = enemies[i];
+          // Calculate the distance and angle to the player
+          const dx = playerX - enemy.x;
+          const dy = playerY - enemy.y;
+          const angle = Math.atan2(dy, dx);
+          // Update the position of the enemy using the angle to the player
+          enemy.x += Math.cos(angle) * 2;
+          enemy.y += Math.sin(angle) * 2;
+        }
+
+        // Draw the player
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(playerX, playerY, 10, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Draw all projectiles
+        ctx.fillStyle = '#fff';
+        for (let i = 0; i < projectiles.length; i++) {
+          const projectile = projectiles[i];
+          ctx.beginPath();
+          ctx.arc(projectile.x, projectile.y, 2, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+
+        // Draw all enemies
+        for (let i = 0; i < enemies.length; i++) {
+          const enemy = enemies[i];
+          // Set the fill color to the enemy's color
+          ctx.fillStyle = enemy.color;
+          // Draw the enemy using its size and position
+          ctx.beginPath();
+          ctx.arc(enemy.x, enemy.y, enemy.size, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+
+        // Schedule the next frame
+        requestAnimationFrame(gameLoop);
+      }
+      // Start the game loop
+      gameLoop();
+    </script>
+  </body>
+</html>
