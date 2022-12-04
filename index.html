@@ -108,6 +108,21 @@
         }
       }, 1000);
 
+      function gameOverOLD() {
+        // Set the fill color to black
+        ctx.fillStyle = '#000000';
+        // Clear the canvas with the black fill color
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Set the font and fill color for the "game over" text
+        ctx.font = '72px sans-serif';
+        ctx.fillStyle = '#ff0000';
+        // Center the "game over" text on the canvas
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        // Draw the "game over" text on the canvas
+        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+      }
+
       function gameOver() {
         // Set the fill color to black
         ctx.fillStyle = '#000000';
@@ -121,6 +136,47 @@
         ctx.textBaseline = 'middle';
         // Draw the "game over" text on the canvas
         ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+
+        // Set the font and fill color for the final score text
+        ctx.font = '48px sans-serif';
+        ctx.fillStyle = '#00ff00';
+        // Draw the final score text below the "game over" text
+        ctx.fillText('FINAL SCORE: ' + score, canvas.width / 2, canvas.height / 2 + 72);
+      }
+
+      function drawProjectile(projectile) {
+        // Save the current state of the canvas context
+        ctx.save();
+
+        // Rotate the canvas context by the projectile's rotation
+        ctx.rotate(projectile.rotation);
+
+        // Set the stroke style for the projectile
+        ctx.strokeStyle = '#8a2be2';
+        // Set the line width for the projectile
+        ctx.lineWidth = projectile.size;
+
+        // Begin a new path for the projectile
+        ctx.beginPath();
+        // Move to the starting position of the projectile
+        ctx.moveTo(projectile.x, projectile.y);
+        // Draw a line to the first point of the star
+        ctx.lineTo(projectile.x + projectile.size * 0.5, projectile.y + projectile.size * 0.866);
+        // Draw a line to the second point of the star
+        ctx.lineTo(projectile.x + projectile.size * 0.866, projectile.y + projectile.size * 0.5);
+        // Draw a line to the third point of the star
+        ctx.lineTo(projectile.x + projectile.size, projectile.y);
+        // Draw a line to the fourth point of the star
+        ctx.lineTo(projectile.x + projectile.size * 0.866, projectile.y - projectile.size * 0.5);
+        // Draw a line to the fifth point of the star
+        ctx.lineTo(projectile.x + projectile.size * 0.5, projectile.y - projectile.size * 0.866);
+        // Close the path, connecting the last point to the first point of the star
+        ctx.closePath();
+        // Stroke the path with the specified stroke style and line width
+        ctx.stroke();
+
+        // Restore the previous state of the canvas context
+        ctx.restore();
       }
 
       // Main game loop
@@ -136,6 +192,12 @@
           // Calculate the new position of the projectile using its stored angle
           projectile.x += Math.cos(projectile.angle) * 10;
           projectile.y += Math.sin(projectile.angle) * 10;
+
+          // Update the projectile's rotation
+          projectile.rotation += 0.5;
+
+          //Draw the projectile
+          drawProjectile(projectile);
           // Check for collisions between the projectile and enemies
           for (let j = 0; j < enemies.length; j++) {
             const enemy = enemies[j];
@@ -198,15 +260,6 @@
         ctx.beginPath();
         ctx.arc(playerX, playerY, 10, 0, 2 * Math.PI);
         ctx.fill();
-
-        // Draw all projectiles
-        ctx.fillStyle = '#fff';
-        for (let i = 0; i < projectiles.length; i++) {
-          const projectile = projectiles[i];
-          ctx.beginPath();
-          ctx.arc(projectile.x, projectile.y, 2, 0, 2 * Math.PI);
-          ctx.fill();
-        }
 
         // Draw all enemies
         for (let i = 0; i < enemies.length; i++) {
