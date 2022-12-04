@@ -1,0 +1,251 @@
+<html>
+  <head>
+    <title>Top-Down Shooter</title>
+  </head>
+  <body>
+    <canvas id="game-canvas" width="400" height="400"></canvas>
+    <script>
+      // Get a reference to the canvas element
+      const canvas = document.getElementById('game-canvas');
+      // Set the initial size of the canvas to match the size of the browser window
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      // Add an event listener to update the size of the canvas when the window is resized
+      window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+      // Get the 2D rendering context
+      const ctx = canvas.getContext('2d');
+      // Set the fill color to a muted blue
+      ctx.fillStyle = '#6699cc';
+      // Initialize game variables
+      let playerX = canvas.width / 2;
+      let playerY = canvas.height / 2;
+      const playerSize = 20;
+      let projectiles = [];
+      let enemies = [];
+      const enemySpeed = -5;
+      let score = 0;
+
+      // Track which keys are currently pressed
+      let keysPressed = {
+        w: false,
+        a: false,
+        s: false,
+        d: false,
+      };
+
+      // Handle keydown events
+      window.addEventListener('keydown', (event) => {
+        if (event.key === 'w') {
+          keysPressed.w = true;
+        }
+        if (event.key === 'a') {
+          keysPressed.a = true;
+        }
+        if (event.key === 's') {
+          keysPressed.s = true;
+        }
+        if (event.key === 'd') {
+          keysPressed.d = true;
+        }
+      });
+
+      // Handle keyup events
+      window.addEventListener('keyup', (event) => {
+        if (event.key === 'w') {
+          keysPressed.w = false;
+        }
+        if (event.key === 'a') {
+          keysPressed.a = false;
+        }
+        if (event.key === 's') {
+          keysPressed.s = false;
+        }
+        if (event.key === 'd') {
+          keysPressed.d = false;
+        }
+      });
+
+      // Handle player clicking the mouse to shoot a projectile
+      canvas.addEventListener('click', (event) => {
+        // Get the mouse position relative to the canvas
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        // Calculate the angle to the mouse position
+        const dx = x - playerX;
+        const dy = y - playerY;
+        const angle = Math.atan2(dy, dx);
+        // Create a new projectile
+        projectiles.push({
+          x: playerX,
+          y: playerY,
+          angle: angle,
+          size: 5,
+          color: '#ffffff',
+        });
+      });
+
+      // Add new enemies at regular intervals
+      setInterval(() => {
+        // Choose a random position for the enemy
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        // Generate random values for the saturation and lightness
+        // Set the lightness value to be between 0 and 100 to avoid pure black or white
+        const saturation = Math.random() * 100;
+        const lightness = Math.random() * 100;
+        // Create a new enemy object with a red hue and the generated saturation and lightness
+        if(enemies.length < 10) {
+          enemies.push({
+            x: x,
+            y: y,
+            size: 20,
+            color: `hsl(0, ${saturation}%, ${lightness}%)`,
+          });
+        }
+      }, 1000);
+
+      function gameOver() {
+        // Set the fill color to black
+        ctx.fillStyle = '#000000';
+        // Clear the canvas with the black fill color
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Set the font and fill color for the "game over" text
+        ctx.font = '72px sans-serif';
+        ctx.fillStyle = '#ff0000';
+        // Center the "game over" text on the canvas
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        // Draw the "game over" text on the canvas
+        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+      }
+
+      // Main game loop
+      function gameLoop() {
+        // Set the fill color to a muted blue
+        ctx.fillStyle = '#6699cc';
+        // Clear the canvas with the muted blue fill color
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Update the positions of all projectiles
+        for (let i = 0; i < projectiles.length; i++) {
+          const projectile = projectiles[i];
+          // Calculate the new position of the projectile using its stored angle
+          projectile.x += Math.cos(projectile.angle) * 10;
+          projectile.y += Math.sin(projectile.angle) * 10;
+          // Check for collisions between the projectile and enemies
+          for (let j = 0; j < enemies.length; j++) {
+            const enemy = enemies[j];
+            // Calculate the distance between the projectile and the enemy
+            const dx = enemy.x - projectile.x;
+            const dy = enemy.y - projectile.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            // Print the distance between the projectile and the enemy
+            console.log(`Distance: ${distance}`);
+            // If the distance is less than the sum of the sizes of the projectile and enemy,
+              // they are colliding
+            if (distance < projectile.size + enemy.size) {
+              // Print a message indicating that a collision has occurred
+              console.log('Collision detected');
+              // Remove the projectile and enemy from the game
+              projectiles.splice(i, 1);
+              enemies.splice(j, 1);
+              // Increment the score by 1
+              score++;
+              // Decrement the indices to avoid skipping over any projectiles or enemies
+              i--;
+              j--;
+              // Stop checking for collisions with this projectile
+              break;
+            }
+          }
+          // If the projectile is outside the canvas, remove it from the array
+          if (
+            projectile.x < 0 ||
+            projectile.x > canvas.width ||
+            projectile.y < 0 ||
+            projectile.y > canvas.height
+          ) {
+            projectiles.splice(i, 1);
+            i--;
+          }
+        }
+
+        // Update the positions of all enemies
+        for (let i = 0; i < enemies.length; i++) {
+          const enemy = enemies[i];
+          // Calculate the distance between the enemy and the player
+          const dx = enemy.x - playerX;
+          const dy = enemy.y - playerY;
+          const angle = Math.atan2(dy, dx);
+          enemy.x += Math.cos(angle) * enemySpeed;
+          enemy.y += Math.sin(angle) * enemySpeed;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          // If the distance is less than the sum of the sizes of the enemy and player,
+            // they are colliding
+          if (distance < enemy.size + playerSize) {
+            cancelAnimationFrame(gameLoop);
+            gameOver();
+            return;
+          }
+        }
+
+        // Draw the player
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(playerX, playerY, 10, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Draw all projectiles
+        ctx.fillStyle = '#fff';
+        for (let i = 0; i < projectiles.length; i++) {
+          const projectile = projectiles[i];
+          ctx.beginPath();
+          ctx.arc(projectile.x, projectile.y, 2, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+
+        // Draw all enemies
+        for (let i = 0; i < enemies.length; i++) {
+          const enemy = enemies[i];
+          // Set the fill color to the enemy's color
+          ctx.fillStyle = enemy.color;
+          // Draw the enemy using its size and position
+          ctx.beginPath();
+          ctx.arc(enemy.x, enemy.y, enemy.size, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+
+        // Update the player's position based on which keys are currently pressed
+        if (keysPressed.w) {
+          playerY -= 5;
+        }
+        if (keysPressed.a) {
+          playerX -= 5;
+        }
+        if (keysPressed.s) {
+          playerY += 5;
+        }
+        if (keysPressed.d) {
+          playerX += 5;
+        }
+
+        // Draw the score in the upper right corner of the canvas
+        ctx.font = '16px sans-serif';
+        ctx.fillStyle = '#00ff00';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'top';
+        ctx.fillText(`Score: ${score}`, canvas.width - 10, 10);
+
+        // Schedule the next frame
+        requestAnimationFrame(gameLoop);
+      }
+      // Start the game loop
+      gameLoop();
+      gameOver();
+    </script>
+  </body>
+</html>
