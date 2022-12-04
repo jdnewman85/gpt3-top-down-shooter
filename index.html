@@ -129,39 +129,41 @@
         ctx.fillText('FINAL SCORE: ' + score, canvas.width / 2, canvas.height / 2 + 72);
       }
 
+      function drawStar(x, y, outerRadius, innerRadius, points) {
+        // Calculate the angle between each point of the star
+        const angle = 2 * Math.PI / points;
+
+        // Begin a new path for the star
+        ctx.beginPath();
+        // Move to the starting position of the star
+        ctx.moveTo(x + outerRadius, y);
+        // Draw lines to each point of the star
+        for (let i = 1; i <= points; i++) {
+          // Calculate the x and y coordinates of the current point of the star
+          const xCoord = x + outerRadius * Math.cos(i * angle);
+          const yCoord = y + outerRadius * Math.sin(i * angle);
+          // Draw a line to the current point of the star
+          ctx.lineTo(xCoord, yCoord);
+          // Calculate the x and y coordinates of the inner point of the star
+          const xCoordInner = x + innerRadius * Math.cos(i * angle + angle / 2);
+          const yCoordInner = y + innerRadius * Math.sin(i * angle + angle / 2);
+          // Draw a line to the inner point of the star
+          ctx.lineTo(xCoordInner, yCoordInner);
+        }
+        // Close the path, connecting the last point of the star to the first point
+        ctx.closePath();
+        // Stroke the path with the specified stroke style and line width
+        ctx.stroke();
+      }
+
       function drawProjectile(projectile) {
-        // Save the current state of the canvas context
-        ctx.save();
-
-        // Rotate the canvas context by the projectile's rotation
-        ctx.rotate(projectile.rotation);
-
         // Set the stroke style for the projectile
         ctx.strokeStyle = '#8a2be2';
         // Set the line width for the projectile
         ctx.lineWidth = projectile.size;
 
-        // Begin a new path for the projectile
-        ctx.beginPath();
-        // Move to the starting position of the projectile
-        ctx.moveTo(projectile.x, projectile.y);
-        // Draw a line to the first point of the star
-        ctx.lineTo(projectile.x + projectile.size * 0.5, projectile.y + projectile.size * 0.866);
-        // Draw a line to the second point of the star
-        ctx.lineTo(projectile.x + projectile.size * 0.866, projectile.y + projectile.size * 0.5);
-        // Draw a line to the third point of the star
-        ctx.lineTo(projectile.x + projectile.size, projectile.y);
-        // Draw a line to the fourth point of the star
-        ctx.lineTo(projectile.x + projectile.size * 0.866, projectile.y - projectile.size * 0.5);
-        // Draw a line to the fifth point of the star
-        ctx.lineTo(projectile.x + projectile.size * 0.5, projectile.y - projectile.size * 0.866);
-        // Close the path, connecting the last point to the first point of the star
-        ctx.closePath();
-        // Stroke the path with the specified stroke style and line width
-        ctx.stroke();
-
-        // Restore the previous state of the canvas context
-        ctx.restore();
+        // Draw the projectile using the drawStar function
+        drawStar(projectile.x, projectile.y, projectile.size, projectile.size * 0.5, 5);
       }
 
       // Main game loop
@@ -177,9 +179,6 @@
           // Calculate the new position of the projectile using its stored angle
           projectile.x += Math.cos(projectile.angle) * 10;
           projectile.y += Math.sin(projectile.angle) * 10;
-
-          // Update the projectile's rotation
-          projectile.rotation += 0.5;
 
           //Draw the projectile
           drawProjectile(projectile);
